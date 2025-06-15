@@ -36,8 +36,11 @@ A Streamlit-powered assistant for managing your [MyAnimeList](https://myanimelis
 ---
 
 ## Screenshots
-Home Page	MAL Login	Anime List
-!Home	!Login	Anime List
+![Login](https://github.com/user-attachments/assets/924b90c4-2443-4da9-a0f1-db264ea6a646)
+
+![Homepage](https://github.com/user-attachments/assets/5dffd346-0d27-411e-925d-b9aa346907a1)
+
+![My Anime List Query](https://github.com/user-attachments/assets/2f7a1199-467e-48a4-8d50-1e53d93049fe)
 
 ## Getting Started
 
