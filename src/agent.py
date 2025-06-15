@@ -1,10 +1,13 @@
 from tools import add_anime, remove_anime, get_anime_list, search_anime, format_anime_list, display_anime_cards, hianime_watchlink, anime_suggestion
 from smolagents import CodeAgent, OpenAIServerModel
 from smolagents import DuckDuckGoSearchTool
+from dotenv import load_dotenv
+import os
 
+load_dotenv()
 
-GEMINI_API_KEY = "AIzaSyDrSVoJnOEZclbciDf5hyor665iHG1nQsQ"
-DEEPSEEK_API_KEY = "sk-5901a93f69824788a61a2bc68925a3a9"
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY")
 
 def initialize_agent():
     """

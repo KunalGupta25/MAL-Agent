@@ -7,12 +7,16 @@ import threading
 import time
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from urllib.parse import urlparse, parse_qs
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
 
 # Configuration (move these to secrets.toml in production)
-CLIENT_ID = "e85f0329ae62138e962530f300c6549b"
-CLIENT_SECRET = "6a2bb65ea4fb863507cf7cf0452aa5c59825f142eee3c6bd639846155dddcec0"
-REDIRECT_URI = "http://localhost:8080/callback"
-PORT = 8080
+CLIENT_ID = os.getenv("MAL_CLIENT_ID")
+CLIENT_SECRET = os.getenv("MAL_CLIENT_SECRET")
+REDIRECT_URI = os.getenv("MAL_REDIRECT_URI", "http://localhost:8000/callback")
+PORT = int(os.getenv("MAL_PORT", 8000))
 
 class MALAuth:
     def __init__(self):

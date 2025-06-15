@@ -8,3 +8,4 @@ DuckDuckGoSearchTool
 requests
 smolagents[openai]
 duckduckgo-search
+python-dotenv
