@@ -20,21 +20,42 @@ PORT = int(os.getenv("MAL_PORT", 8000))
 
 class MALAuth:
     def __init__(self):
-        # code_verifier and code_challenge will be set in start_oauth_flow
-        self.code_verifier = None
-        self.code_challenge = None
+        self.code_verifier = secrets.token_urlsafe(64)
+        self.code_challenge = self.code_verifier  # Using 'plain' method
         self.auth_code = None
         self.error = None
 
-    def start_oauth_flow(self):
-        # Only generate new code_verifier if not already in session_state or if code param is not present
-        query_params = st.query_params
-        if "code" not in query_params:
-            st.session_state.code_verifier = secrets.token_urlsafe(64)
-            st.session_state.code_challenge = st.session_state.code_verifier  # 'plain' method
+    class OAuthHandler(BaseHTTPRequestHandler):
+        auth_code = None
+        error = None
 
-        self.code_verifier = st.session_state.code_verifier
-        self.code_challenge = st.session_state.code_challenge
+        def do_GET(self):
+            parsed = urlparse(self.path)
+            params = parse_qs(parsed.query)
+            if "code" in params:
+                MALAuth.OAuthHandler.auth_code = params["code"][0]
+                self.send_response(200)
+                self.end_headers()
+                self.wfile.write(b"Authorization successful! Return to the app.")
+            elif "error" in params:
+                MALAuth.OAuthHandler.error = params["error"][0]
+                self.send_response(400)
+                self.end_headers()
+                self.wfile.write(b"Authorization failed. Check your settings.")
+            else:
+                self.send_response(400)
+                self.end_headers()
+                self.wfile.write(b"Invalid request")
+
+    def run_server(self):
+        server = HTTPServer(('localhost', PORT), self.OAuthHandler)
+        server.timeout = 120
+        server.handle_request()
+
+    def start_oauth_flow(self):
+        server_thread = threading.Thread(target=self.run_server)
+        server_thread.daemon = True
+        server_thread.start()
 
         auth_url = (
             "https://myanimelist.net/v1/oauth2/authorize?"
@@ -43,60 +64,15 @@ class MALAuth:
             f"code_challenge={self.code_challenge}&"
             f"redirect_uri={REDIRECT_URI}"
         )
-        st.write('')  # spacing
-        st.link_button("Click here to authenticate with MyAnimeList", auth_url)
+        webbrowser.open(auth_url)
 
-        # Streamlit Community Cloud: handle redirect via query params
-        if "code" in query_params:
-            self.auth_code = query_params["code"][0] if isinstance(query_params["code"], list) else query_params["code"]
-            return self.auth_code, None
-        elif "error" in query_params:
-            self.error = query_params["error"][0] if isinstance(query_params["error"], list) else query_params["error"]
-            return None, self.error
+        start_time = time.time()
+        while not self.OAuthHandler.auth_code and not self.OAuthHandler.error:
+            if time.time() - start_time > 120:
+                return None, "Authorization timed out"
+            time.sleep(0.5)
 
-        # Local: try to run a local HTTP server if running on localhost
-        if "localhost" in REDIRECT_URI or "127.0.0.1" in REDIRECT_URI:
-            try:
-                from http.server import HTTPServer, BaseHTTPRequestHandler
-                import threading
-                import time
-                class OAuthHandler(BaseHTTPRequestHandler):
-                    auth_code = None
-                    error = None
-                    def do_GET(self):
-                        from urllib.parse import urlparse, parse_qs
-                        parsed = urlparse(self.path)
-                        params = parse_qs(parsed.query)
-                        if "code" in params:
-                            OAuthHandler.auth_code = params["code"][0]
-                            self.send_response(200)
-                            self.end_headers()
-                            self.wfile.write(b"Authorization successful! Return to the app.")
-                        elif "error" in params:
-                            OAuthHandler.error = params["error"][0]
-                            self.send_response(400)
-                            self.end_headers()
-                            self.wfile.write(b"Authorization failed. Check your settings.")
-                        else:
-                            self.send_response(400)
-                            self.end_headers()
-                            self.wfile.write(b"Invalid request")
-                server = HTTPServer(('localhost', PORT), OAuthHandler)
-                server.timeout = 120
-                server_thread = threading.Thread(target=server.handle_request)
-                server_thread.daemon = True
-                server_thread.start()
-                import webbrowser
-                webbrowser.open(auth_url)
-                start_time = time.time()
-                while not OAuthHandler.auth_code and not OAuthHandler.error:
-                    if time.time() - start_time > 120:
-                        return None, "Authorization timed out"
-                    time.sleep(0.5)
-                return OAuthHandler.auth_code, OAuthHandler.error
-            except Exception as e:
-                return None, f"Local OAuth server failed: {e}"
-        return None, None
+        return self.OAuthHandler.auth_code, self.OAuthHandler.error
 
     def get_access_token(self, auth_code):
         token_url = "https://myanimelist.net/v1/oauth2/token"
@@ -104,7 +80,7 @@ class MALAuth:
             "client_id": CLIENT_ID,
             "client_secret": CLIENT_SECRET,
             "code": auth_code,
-            "code_verifier": self.code_verifier if self.code_verifier else st.session_state.get("code_verifier"),
+            "code_verifier": self.code_verifier,
             "grant_type": "authorization_code",
             "redirect_uri": REDIRECT_URI
         }
