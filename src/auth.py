@@ -20,12 +20,21 @@ PORT = int(os.getenv("MAL_PORT", 8000))
 
 class MALAuth:
     def __init__(self):
-        self.code_verifier = secrets.token_urlsafe(64)
-        self.code_challenge = self.code_verifier  # Using 'plain' method
+        # code_verifier and code_challenge will be set in start_oauth_flow
+        self.code_verifier = None
+        self.code_challenge = None
         self.auth_code = None
         self.error = None
 
     def start_oauth_flow(self):
+        # Only generate new code_verifier if not already in session_state
+        if "code_verifier" not in st.session_state:
+            st.session_state.code_verifier = secrets.token_urlsafe(64)
+            st.session_state.code_challenge = st.session_state.code_verifier  # 'plain' method
+
+        self.code_verifier = st.session_state.code_verifier
+        self.code_challenge = st.session_state.code_challenge
+
         auth_url = (
             "https://myanimelist.net/v1/oauth2/authorize?"
             f"response_type=code&"
@@ -33,7 +42,9 @@ class MALAuth:
             f"code_challenge={self.code_challenge}&"
             f"redirect_uri={REDIRECT_URI}"
         )
-        st.markdown(f"[Click here to authenticate with MyAnimeList]({auth_url})", unsafe_allow_html=True)
+        # Use a button to open the auth link in the same tab
+        st.write('')  # spacing
+        st.link_button("Click here to authenticate with MyAnimeList", auth_url)
 
         # Streamlit Community Cloud: handle redirect via query params
         query_params = st.query_params
@@ -94,7 +105,7 @@ class MALAuth:
             "client_id": CLIENT_ID,
             "client_secret": CLIENT_SECRET,
             "code": auth_code,
-            "code_verifier": self.code_verifier,
+            "code_verifier": self.code_verifier if self.code_verifier else st.session_state.get("code_verifier"),
             "grant_type": "authorization_code",
             "redirect_uri": REDIRECT_URI
         }
