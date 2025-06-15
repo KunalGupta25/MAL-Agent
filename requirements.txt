@@ -2,10 +2,10 @@ altair
 pandas
 streamlit
 smolagents
-smolagents[toolkit]
+# smolagents[toolkit]
 streamlit
 DuckDuckGoSearchTool
 requests
-smolagents[openai]
+# smolagents[openai]
 duckduckgo-search
 python-dotenv
