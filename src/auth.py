@@ -27,8 +27,9 @@ class MALAuth:
         self.error = None
 
     def start_oauth_flow(self):
-        # Only generate new code_verifier if not already in session_state
-        if "code_verifier" not in st.session_state:
+        # Only generate new code_verifier if not already in session_state or if code param is not present
+        query_params = st.query_params
+        if "code" not in query_params:
             st.session_state.code_verifier = secrets.token_urlsafe(64)
             st.session_state.code_challenge = st.session_state.code_verifier  # 'plain' method
 
@@ -42,12 +43,10 @@ class MALAuth:
             f"code_challenge={self.code_challenge}&"
             f"redirect_uri={REDIRECT_URI}"
         )
-        # Use a button to open the auth link in the same tab
         st.write('')  # spacing
         st.link_button("Click here to authenticate with MyAnimeList", auth_url)
 
         # Streamlit Community Cloud: handle redirect via query params
-        query_params = st.query_params
         if "code" in query_params:
             self.auth_code = query_params["code"][0] if isinstance(query_params["code"], list) else query_params["code"]
             return self.auth_code, None
