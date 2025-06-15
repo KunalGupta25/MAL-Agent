@@ -9,7 +9,3 @@ requests
 smolagents[openai]
 duckduckgo-search
 python-dotenv
-streamlit
-requests
-python-dotenv
-smolagents
