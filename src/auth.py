@@ -64,7 +64,8 @@ class MALAuth:
             f"code_challenge={self.code_challenge}&"
             f"redirect_uri={REDIRECT_URI}"
         )
-        webbrowser.open(auth_url)
+        # webbrowser.open(auth_url)  # Remove this for hosted environments
+        st.markdown(f"[Click here to authenticate with MyAnimeList]({auth_url})", unsafe_allow_html=True)
 
         start_time = time.time()
         while not self.OAuthHandler.auth_code and not self.OAuthHandler.error:
