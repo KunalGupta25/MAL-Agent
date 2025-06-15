@@ -3,7 +3,9 @@ import streamlit as st
 import requests
 import webbrowser
 import secrets
+import threading
 import time
+from http.server import HTTPServer, BaseHTTPRequestHandler
 from urllib.parse import urlparse, parse_qs
 from dotenv import load_dotenv
 import os
@@ -23,7 +25,38 @@ class MALAuth:
         self.auth_code = None
         self.error = None
 
+    class OAuthHandler(BaseHTTPRequestHandler):
+        auth_code = None
+        error = None
+
+        def do_GET(self):
+            parsed = urlparse(self.path)
+            params = parse_qs(parsed.query)
+            if "code" in params:
+                MALAuth.OAuthHandler.auth_code = params["code"][0]
+                self.send_response(200)
+                self.end_headers()
+                self.wfile.write(b"Authorization successful! Return to the app.")
+            elif "error" in params:
+                MALAuth.OAuthHandler.error = params["error"][0]
+                self.send_response(400)
+                self.end_headers()
+                self.wfile.write(b"Authorization failed. Check your settings.")
+            else:
+                self.send_response(400)
+                self.end_headers()
+                self.wfile.write(b"Invalid request")
+
+    def run_server(self):
+        server = HTTPServer(('localhost', PORT), self.OAuthHandler)
+        server.timeout = 120
+        server.handle_request()
+
     def start_oauth_flow(self):
+        server_thread = threading.Thread(target=self.run_server)
+        server_thread.daemon = True
+        server_thread.start()
+
         auth_url = (
             "https://myanimelist.net/v1/oauth2/authorize?"
             f"response_type=code&"
@@ -31,18 +64,15 @@ class MALAuth:
             f"code_challenge={self.code_challenge}&"
             f"redirect_uri={REDIRECT_URI}"
         )
-        st.markdown(f"[Click here to authenticate with MyAnimeList]({auth_url})", unsafe_allow_html=True)
+        webbrowser.open(auth_url)
 
-        # Check for code in query params (Streamlit Cloud compatible)
-        query_params = st.experimental_get_query_params()
-        if "code" in query_params:
-            self.auth_code = query_params["code"][0]
-            return self.auth_code, None
-        elif "error" in query_params:
-            self.error = query_params["error"][0]
-            return None, self.error
-        else:
-            return None, None
+        start_time = time.time()
+        while not self.OAuthHandler.auth_code and not self.OAuthHandler.error:
+            if time.time() - start_time > 120:
+                return None, "Authorization timed out"
+            time.sleep(0.5)
+
+        return self.OAuthHandler.auth_code, self.OAuthHandler.error
 
     def get_access_token(self, auth_code):
         token_url = "https://myanimelist.net/v1/oauth2/token"
