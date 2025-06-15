@@ -46,6 +46,8 @@ if not st.session_state.access_token:
     st.title("MyAnimeList Assistant")
     st.write("Please log in with your MyAnimeList account to continue.")
     login_button()
+    st.write("Currenltly the App can only be used on localhost, so you need to run the app locally to use it.")
+    st.markdown("[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/Y8Y6IPAOF)")
 else:
     # Initialize the agent after login if not already done
     if st.session_state.agent is None:
@@ -77,6 +79,7 @@ else:
                 {"role": "assistant", "content": "Hi! I'm your MyAnimeList assistant. How can I help you today?"}
             ]
             st.rerun()
+        st.markdown("[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/Y8Y6IPAOF)")
 
     # Display chat history
     for msg in st.session_state.messages:

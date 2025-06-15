@@ -12,13 +12,6 @@ short_description: MyAnimeList Based Agent
 license: mit
 ---
 
-# Welcome to Streamlit!
-
-Edit `/src/streamlit_app.py` to customize this app to your heart's desire. :heart:
-
-If you have any questions, checkout our [documentation](https://docs.streamlit.io) and [community
-forums](https://discuss.streamlit.io).
-
 # MAL Agent 🚀
 
 A Streamlit-powered assistant for managing your [MyAnimeList](https://myanimelist.net/) anime list, discovering new anime, and getting recommendations—all in a friendly chat interface.
@@ -41,6 +34,10 @@ A Streamlit-powered assistant for managing your [MyAnimeList](https://myanimelis
   - OAuth2 login with your MAL account.
 
 ---
+
+## Screenshots
+Home Page	MAL Login	Anime List
+!Home	!Login	Anime List
 
 ## Getting Started
 
@@ -114,6 +111,13 @@ docker run -p 8501:8501 --env-file .env mal-agent
 
 ---
 
+### Important Note
+> **This app can only be run locally.**
+
+> Due to the way MyAnimeList OAuth and PKCE authentication works, you must run this app on your own machine (localhost). Hosting on Streamlit Community Cloud or other remote servers is not supported for full authentication functionality.
+
+
+
 ## License
 
 MIT
@@ -132,6 +136,4 @@ MIT
 
 If you like this project, consider supporting me on Ko-fi!
 
-<a href="https://ko-fi.com/yourusername" target="_blank">
-  <img src="https://cdn.ko-fi.com/cdn/kofi_button.png?v=3" alt="Buy Me a Coffee at ko-fi.com" height="36" style="border:0px;height:36px;" />
-</a>
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/Y8Y6IPAOF)
