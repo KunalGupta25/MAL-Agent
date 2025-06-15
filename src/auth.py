@@ -36,12 +36,12 @@ class MALAuth:
         st.markdown(f"[Click here to authenticate with MyAnimeList]({auth_url})", unsafe_allow_html=True)
 
         # Streamlit Community Cloud: handle redirect via query params
-        query_params = st.experimental_get_query_params()
+        query_params = st.query_params
         if "code" in query_params:
-            self.auth_code = query_params["code"][0]
+            self.auth_code = query_params["code"][0] if isinstance(query_params["code"], list) else query_params["code"]
             return self.auth_code, None
         elif "error" in query_params:
-            self.error = query_params["error"][0]
+            self.error = query_params["error"][0] if isinstance(query_params["error"], list) else query_params["error"]
             return None, self.error
 
         # Local: try to run a local HTTP server if running on localhost
